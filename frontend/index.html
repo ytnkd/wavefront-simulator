@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wavefront Simulator</title>
+    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Apple-style Navigation -->
+    <nav class="global-nav">
+      <div class="nav-content">
+        <span class="logo">Wavefront</span>
+        <div class="nav-links">
+          <a href="#configure">Configure</a>
+          <a href="#results">Results</a>
+        </div>
+      </div>
+    </nav>
+    <header style="text-align: center; margin-top: 80px; margin-bottom: 20px;">
+      <h1 class="hero-title">Wavefront Simulator</h1>
+    </header>
+
+    <main class="app-layout">
+      <!-- Sidebar (Left) -->
+      <aside id="configure" class="sidebar">
+        
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h3>All Presets</h3>
+            <p>Quickly apply standard aberration templates.</p>
+          </div>
+          <select id="preset-select" class="apple-select">
+            <option value="">-- Choose a Preset --</option>
+          </select>
+        </div>
+
+        <div class="glass-panel mode-panel">
+          <div class="panel-header">
+            <h3>Zernike Modes</h3>
+            <p>Click a card to activate and adjust.</p>
+          </div>
+          <div id="modes-grid" class="modes-grid">
+            <!-- Cards injected by JS -->
+          </div>
+        </div>
+
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h3>Simulation Settings</h3>
+            <p>Adjust environmental parameters.</p>
+          </div>
+          <div class="settings-grid">
+            <div class="setting-item">
+              <label>Pupil (mm) <span id="val-pupil" class="badge">4.0</span></label>
+              <input type="range" id="pupil" min="2.0" max="7.0" step="0.1" value="4.0">
+            </div>
+            <div class="setting-item">
+              <label>Wavelength (nm) <span id="val-wavelength" class="badge">555</span></label>
+              <input type="range" id="wavelength" min="450" max="650" step="5" value="555">
+            </div>
+            <div class="setting-item">
+              <label>Landolt Size (arcmin) <span id="val-landolt" class="badge">20.0</span></label>
+              <input type="range" id="landolt" min="5.0" max="60.0" step="1.0" value="20.0">
+            </div>
+            <div class="setting-item">
+              <label>Contrast <span id="val-contrast" class="badge">1.0</span></label>
+              <input type="range" id="contrast" min="0.05" max="1.0" step="0.05" value="1.0">
+            </div>
+            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+              <label style="width: 100%;">Gap Direction</label>
+              <select id="gap" class="apple-select" style="padding: 10px;">
+                <option value="0">Right: 0 deg</option>
+                <option value="90">Up: 90 deg</option>
+                <option value="180">Left: 180 deg</option>
+                <option value="270">Down: 270 deg</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btn-run" class="btn btn-blue">Run Simulation</button>
+          <button id="btn-reset" class="btn btn-red">Reset Selection</button>
+        </div>
+      </aside>
+
+      <!-- Resizer -->
+      <div class="resizer" id="drag-resizer"></div>
+
+      <!-- Results Area (Right) -->
+      <section id="results" class="results-area">
+        <div id="loading" class="loading-overlay hidden">
+          <div class="spinner"></div>
+          <p>Running Simulation...</p>
+        </div>
+        
+        <div id="empty-state" class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4; margin-bottom: 16px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          <h2>Ready to Visualize.</h2>
+          <p>Set your parameters on the left and click "Run Simulation".</p>
+        </div>
+        
+        <div id="results-content" class="results-content hidden">
+          <div class="result-glass">
+            <h3>Coefficients & RMS Summary</h3>
+            <div id="summary-container" class="summary-container">
+              <!-- Injected dynamically by JS -->
+            </div>
+          </div>
+
+          <div class="result-glass">
+            <h3>Wavefront Mode Map</h3>
+            <img id="mode-map-img" class="result-img" src="" alt="Mode Map">
+          </div>
+
+          <div class="result-glass">
+            <h3>Full Simulation Report</h3>
+            <img id="report-img" class="result-img" src="" alt="Simulation Report">
+          </div>
+
+          <div class="result-glass">
+            <h3>Vision Simulation</h3>
+            <p style="color: #6e6e73; font-size: 14px; margin-bottom: 16px;">
+              Original vs. Simulated vision
+            </p>
+            <div class="vision-list">
+              <div class="vision-row">
+                <div class="vision-col"><div class="vision-label">Original (Morning)</div><img class="vision-img" src="/02.png" alt="Original Morning"></div>
+                <div class="vision-col"><div class="vision-label">Simulated</div><img id="vision-img-0" class="vision-img" src="" alt="Simulated Morning"></div>
+              </div>
+              <div class="vision-row">
+                <div class="vision-col"><div class="vision-label">Original (Noon)</div><img class="vision-img" src="/03.png" alt="Original Noon"></div>
+                <div class="vision-col"><div class="vision-label">Simulated</div><img id="vision-img-1" class="vision-img" src="" alt="Simulated Noon"></div>
+              </div>
+              <div class="vision-row">
+                <div class="vision-col"><div class="vision-label">Original (Evening)</div><img class="vision-img" src="/04.png" alt="Original Evening"></div>
+                <div class="vision-col"><div class="vision-label">Simulated</div><img id="vision-img-2" class="vision-img" src="" alt="Simulated Evening"></div>
+              </div>
+              <div class="vision-row">
+                <div class="vision-col"><div class="vision-label">Original (Night)</div><img class="vision-img" src="/05.png" alt="Original Night"></div>
+                <div class="vision-col"><div class="vision-label">Simulated</div><img id="vision-img-3" class="vision-img" src="" alt="Simulated Night"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
