@@ -106,3 +106,21 @@ def run_simulation(req: SimulationRequest):
         "formulae": formulae,
         "active_modes": active_modes,
     }
+
+# Mount static files at the end so API routes take precedence
+import os
+import sys
+from fastapi.staticfiles import StaticFiles
+
+# Determine the base path for static files (works both in dev and when frozen by PyInstaller)
+if getattr(sys, 'frozen', False):
+    base_path = sys._MEIPASS
+else:
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+dist_path = os.path.join(base_path, "frontend", "dist")
+
+if os.path.exists(dist_path):
+    app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
+else:
+    print(f"Warning: frontend/dist not found at {dist_path}. Run 'npm run build' in frontend directory.")

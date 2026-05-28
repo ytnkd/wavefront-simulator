@@ -1,0 +1,70 @@
+name: Build Desktop Apps
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r backend/requirements.txt
+
+      - name: Run PyInstaller (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --name "WavefrontSimulator" --add-data "frontend/dist;frontend/dist" run_simulator.py
+
+      - name: Run PyInstaller (Mac)
+        if: matrix.os == 'macos-latest'
+        run: |
+          pyinstaller --noconfirm --onedir --windowed --name "WavefrontSimulator" --add-data "frontend/dist:frontend/dist" run_simulator.py
+
+      - name: Archive Mac App
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd dist
+          zip -r WavefrontSimulator-Mac.zip WavefrontSimulator.app
+
+      - name: Upload Artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: WavefrontSimulator-Windows
+          path: dist/WavefrontSimulator.exe
+
+      - name: Upload Artifact (Mac)
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: WavefrontSimulator-Mac
+          path: dist/WavefrontSimulator-Mac.zip
